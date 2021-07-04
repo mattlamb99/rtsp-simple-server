@@ -26,6 +26,7 @@ type Core struct {
 	confFound       bool
 	stats           *stats
 	logger          *logger.Logger
+	api             *api
 	metrics         *metrics
 	pprof           *pprof
 	pathMan         *pathManager
@@ -171,6 +172,17 @@ func (p *Core) createResources(initial bool) error {
 		p.Log(logger.Info, "rtsp-simple-server %s", version)
 		if !p.confFound {
 			p.Log(logger.Warn, "configuration file not found, using the default one")
+		}
+	}
+
+	if p.conf.API {
+		if p.api == nil {
+			p.api, err = newAPI(
+				p.conf.APIAddress,
+				p)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -335,6 +347,14 @@ func (p *Core) closeResources(newConf *conf.Conf) {
 		closeLogger = true
 	}
 
+	closeAPI := false
+	if newConf == nil ||
+		newConf.API != p.conf.API ||
+		newConf.APIAddress != p.conf.APIAddress ||
+		closeStats {
+		closeAPI = true
+	}
+
 	closeMetrics := false
 	if newConf == nil ||
 		newConf.Metrics != p.conf.Metrics ||
@@ -468,6 +488,11 @@ func (p *Core) closeResources(newConf *conf.Conf) {
 	if closeMetrics && p.metrics != nil {
 		p.metrics.close()
 		p.metrics = nil
+	}
+
+	if closeAPI && p.api != nil {
+		p.api.close()
+		p.api = nil
 	}
 
 	if closeLogger && p.logger != nil {

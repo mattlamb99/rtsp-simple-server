@@ -65,6 +65,8 @@ type Conf struct {
 	ReadTimeout           time.Duration                   `yaml:"readTimeout"`
 	WriteTimeout          time.Duration                   `yaml:"writeTimeout"`
 	ReadBufferCount       int                             `yaml:"readBufferCount"`
+	API                   bool                            `yaml:"api"`
+	APIAddress            string                          `yaml:"apiAddress"`
 	Metrics               bool                            `yaml:"metrics"`
 	MetricsAddress        string                          `yaml:"metricsAddress"`
 	PPROF                 bool                            `yaml:"pprof"`
@@ -155,6 +157,10 @@ func (conf *Conf) fillAndCheck() error {
 	}
 	if conf.ReadBufferCount == 0 {
 		conf.ReadBufferCount = 512
+	}
+
+	if conf.APIAddress == "" {
+		conf.APIAddress = ":9997"
 	}
 
 	if conf.MetricsAddress == "" {
